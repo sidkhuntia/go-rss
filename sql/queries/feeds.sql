@@ -11,4 +11,4 @@ VALUES
     ) RETURNING *;
 
 -- name: GetFeeds :many
-SELECT * FROM feeds WHERE userId = $1;
+SELECT * FROM feeds;

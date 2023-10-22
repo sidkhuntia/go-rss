@@ -56,11 +56,11 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 }
 
 const getFeeds = `-- name: GetFeeds :many
-SELECT id, createdat, updatedat, name, url, userid FROM feeds WHERE userId = $1
+SELECT id, createdat, updatedat, name, url, userid FROM feeds
 `
 
-func (q *Queries) GetFeeds(ctx context.Context, userid uuid.UUID) ([]Feed, error) {
-	rows, err := q.db.QueryContext(ctx, getFeeds, userid)
+func (q *Queries) GetFeeds(ctx context.Context) ([]Feed, error) {
+	rows, err := q.db.QueryContext(ctx, getFeeds)
 	if err != nil {
 		return nil, err
 	}
