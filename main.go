@@ -28,7 +28,6 @@ func main() {
 		log.Println("No PORT environment variable detected, defaulting to " + portString)
 	}
 
-
 	dbURL := os.Getenv("DB_URL")
 
 	if dbURL == "" {
@@ -39,7 +38,6 @@ func main() {
 	if err != nil {
 		log.Fatal("error connecting to the database: ", err)
 	}
-
 
 	apiCfg := apiConfig{
 		DB: database.New(dbConcc),
@@ -60,6 +58,7 @@ func main() {
 	v1router.Get("/healthz", handlerReadiness)
 	v1router.Get("/error", handlerError)
 	v1router.Post("/users", apiCfg.handlerCreateUser)
+	v1router.Get("/users/me", apiCfg.handlerGetUser)
 
 	router.Mount("/v1", v1router)
 
