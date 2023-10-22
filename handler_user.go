@@ -53,3 +53,20 @@ func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, 
 	respondWithJSON(w, 200, databaseUserToUser(user))
 
 }
+
+// handlerPostsForUser handles GET requests to retrieve a user's posts.
+func (apiCfg *apiConfig) handlerPostsForUser(w http.ResponseWriter, r *http.Request, user database.User) {
+
+	posts, err := apiCfg.DB.GetPostsForUser(r.Context(), database.GetPostsForUserParams{
+		Userid: user.ID,
+		Limit:  int32(10),
+	})
+
+	if err != nil {
+		repsondWithError(w, 500, fmt.Sprintf("Error fetching posts: %v", err))
+		return
+	}
+
+	respondWithJSON(w, 200, databasePostsToPosts(posts))
+
+}

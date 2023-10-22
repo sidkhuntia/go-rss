@@ -45,6 +45,7 @@ func (apiCfg *apiConfig) handlerCreateFeedFollow(w http.ResponseWriter, r *http.
 
 // handlerGetFeedFollows handles GET requests to retrieve the list of feeds followed by a user.
 func (apiCfg *apiConfig) handlerGetFeedFollows(w http.ResponseWriter, r *http.Request, user database.User) {
+	
 	// Get the list of feeds followed by the user from the database.
 	feed_follows, err := apiCfg.DB.GetFeedFollows(r.Context(), user.ID)
 

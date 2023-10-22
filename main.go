@@ -81,6 +81,7 @@ func main() {
 	// Setting up routes for user management
 	v1router.Post("/users", apiCfg.handlerCreateUser)
 	v1router.Get("/users/me", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+	v1router.Get("/users/me/posts", apiCfg.middlewareAuth(apiCfg.handlerPostsForUser))
 
 	// Setting up routes for feed management
 	v1router.Post("/feeds", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))

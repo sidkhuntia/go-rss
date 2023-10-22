@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sidkhuntia/go-rss/internal/database"
 )
 
@@ -51,10 +54,41 @@ func scrapeFeed(db *database.Queries, feed database.Feed, wg *sync.WaitGroup) {
 		log.Printf("Error while fetching feed %s: %v", feed.Url, err)
 		return
 	}
-
+	postCounter := 0
 	for _, item := range rssFeed.Channel.Item {
-	
-		log.Println(item.Title)
+
+		description := sql.NullString{}
+
+		if item.Description != "" {
+			description.String = item.Description
+			description.Valid = true
+		}
+
+		pubAt, err := time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
+			log.Printf("Error while parsing date %s: %v", item.PubDate, err)
+			continue
+		}
+
+		_, err = db.CreatePost(context.Background(), database.CreatePostParams{
+			ID:          uuid.New(),
+			Updatedat:   time.Now(),
+			Createdat:   time.Now(),
+			Title:       item.Title,
+			Description: description,
+			Url:         item.Link,
+			Feedid:      feed.ID,
+			Publishedat: pubAt,
+		})
+
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key") {
+				continue
+			}
+			log.Printf("Error while creating post: %v", err)
+			continue
+		}
+		postCounter++
 	}
-	log.Printf("Fetched feed from %s, found %v posts found", feed.Url, len(rssFeed.Channel.Item))
+	log.Printf("Fetched feed from %s, found %v posts found", feed.Name, postCounter)
 }

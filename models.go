@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sidkhuntia/go-rss/internal/database"
 )
+
 // types to desrcibe our return types in the API
 type User struct {
 	ID        uuid.UUID `json:"id"`
@@ -27,6 +28,17 @@ type FeedFollow struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	UserId    uuid.UUID `json:"user_id"`
 	FeedId    uuid.UUID `json:"feed_id"`
+}
+
+type Post struct {
+	ID          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Title       string    `json:"title"`
+	Description *string   `json:"description"`
+	URL         string    `json:"url"`
+	PublishedAt time.Time `json:"published_at"`
+	FeedId      uuid.UUID `json:"feed_id"`
 }
 
 // helper functions to convert from database types to API types
@@ -70,4 +82,26 @@ func databaseUserToUser(dbUser database.User) User {
 		CreatedAt: dbUser.Createdat,
 		UpdatedAt: dbUser.Updatedat,
 	}
+}
+
+func databasePostToPost(dbPost database.Post) Post {
+	description := dbPost.Description.String
+	return Post{
+		ID:          dbPost.ID,
+		CreatedAt:   dbPost.Createdat,
+		UpdatedAt:   dbPost.Updatedat,
+		Title:       dbPost.Title,
+		Description: &description,
+		URL:         dbPost.Url,
+		PublishedAt: dbPost.Publishedat,
+		FeedId:      dbPost.Feedid,
+	}
+}
+
+func databasePostsToPosts(dbPosts []database.Post) []Post {
+	posts := make([]Post, len(dbPosts))
+	for i, dbPost := range dbPosts {
+		posts[i] = databasePostToPost(dbPost)
+	}
+	return posts
 }
