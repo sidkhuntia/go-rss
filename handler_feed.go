@@ -10,9 +10,10 @@ import (
 	"github.com/sidkhuntia/go-rss/internal/database"
 )
 
-func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
-		Name string `json:"name"`
+		Name   string    `json:"name"`
+		URL    string    `json:"url"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -23,24 +24,19 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		repsondWithError(w, 400, fmt.Sprintf("Error parsing JSON: %v", err))
 		return
 	}
-
-	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
+	feed, err := apiCfg.DB.CreateFeed(r.Context(), database.CreateFeedParams{
 		ID:        uuid.New(),
 		Name:      params.Name,
+		Url:       params.URL,
+		Userid:    user.ID,
 		Updatedat: time.Now(),
 		Createdat: time.Now(),
 	})
 
 	if err != nil {
-		repsondWithError(w, 500, fmt.Sprintf("Error creating user: %v", err))
+		repsondWithError(w, 500, fmt.Sprintf("Error creating feed: %v", err))
 		return
 	}
 
-	respondWithJSON(w, 201, databaseUserToUser(user))
-}
-
-func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
-
-	respondWithJSON(w, 200, databaseUserToUser(user))
-
+	respondWithJSON(w, 201, databaseFeedToFeed(feed))
 }
