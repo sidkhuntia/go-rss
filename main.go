@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -49,12 +50,16 @@ func main() {
 	}
 
 	// Initializing API configuration with database connection
+	db := database.New(dbConcc)
 	apiCfg := apiConfig{
-		DB: database.New(dbConcc),
+		DB: db,
 	}
 
 	// Creating a new router
 	router := chi.NewRouter()
+
+	// starting scrapping
+	go startScrapping(db, 10, time.Minute) // 10 workers every minute
 
 	// Using CORS middleware
 	router.Use(cors.Handler(cors.Options{

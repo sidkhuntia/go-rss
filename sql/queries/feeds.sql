@@ -1,5 +1,6 @@
 -- name: CreateFeed :one
-INSERT INTO feeds(id, createdAt, updatedAt, name, url, userId)
+INSERT INTO
+    feeds(id, createdAt, updatedAt, name, url, userId)
 VALUES
     (
         $1,
@@ -11,4 +12,26 @@ VALUES
     ) RETURNING *;
 
 -- name: GetFeeds :many
-SELECT * FROM feeds;
+SELECT
+    *
+FROM
+    feeds;
+
+-- name: GetNextFeedsToFetch :many
+SELECT
+    *
+FROM
+    feeds
+ORDER BY
+    lastFetchedAt ASC NULLS FIRST
+LIMIT
+    $1;
+
+-- name: MarkFeedAsFetched :one
+UPDATE
+    feeds
+SET
+    lastFetchedAt = NOW(), 
+    updatedAt = NOW()
+WHERE
+    id = $1 RETURNING *;

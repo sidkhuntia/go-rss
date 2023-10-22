@@ -13,7 +13,8 @@ import (
 )
 
 const createFeed = `-- name: CreateFeed :one
-INSERT INTO feeds(id, createdAt, updatedAt, name, url, userId)
+INSERT INTO
+    feeds(id, createdAt, updatedAt, name, url, userId)
 VALUES
     (
         $1,
@@ -22,7 +23,7 @@ VALUES
         $4,
         $5,
         $6
-    ) RETURNING id, createdat, updatedat, name, url, userid
+    ) RETURNING id, createdat, updatedat, name, url, userid, lastfetchedat
 `
 
 type CreateFeedParams struct {
@@ -51,12 +52,16 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 		&i.Name,
 		&i.Url,
 		&i.Userid,
+		&i.Lastfetchedat,
 	)
 	return i, err
 }
 
 const getFeeds = `-- name: GetFeeds :many
-SELECT id, createdat, updatedat, name, url, userid FROM feeds
+SELECT
+    id, createdat, updatedat, name, url, userid, lastfetchedat
+FROM
+    feeds
 `
 
 func (q *Queries) GetFeeds(ctx context.Context) ([]Feed, error) {
@@ -75,6 +80,7 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]Feed, error) {
 			&i.Name,
 			&i.Url,
 			&i.Userid,
+			&i.Lastfetchedat,
 		); err != nil {
 			return nil, err
 		}
@@ -87,4 +93,71 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]Feed, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getNextFeedsToFetch = `-- name: GetNextFeedsToFetch :many
+SELECT
+    id, createdat, updatedat, name, url, userid, lastfetchedat
+FROM
+    feeds
+ORDER BY
+    lastFetchedAt ASC NULLS FIRST
+LIMIT
+    $1
+`
+
+func (q *Queries) GetNextFeedsToFetch(ctx context.Context, limit int32) ([]Feed, error) {
+	rows, err := q.db.QueryContext(ctx, getNextFeedsToFetch, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Feed
+	for rows.Next() {
+		var i Feed
+		if err := rows.Scan(
+			&i.ID,
+			&i.Createdat,
+			&i.Updatedat,
+			&i.Name,
+			&i.Url,
+			&i.Userid,
+			&i.Lastfetchedat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const markFeedAsFetched = `-- name: MarkFeedAsFetched :one
+UPDATE
+    feeds
+SET
+    lastFetchedAt = NOW(), 
+    updatedAt = NOW()
+WHERE
+    id = $1 RETURNING id, createdat, updatedat, name, url, userid, lastfetchedat
+`
+
+func (q *Queries) MarkFeedAsFetched(ctx context.Context, id uuid.UUID) (Feed, error) {
+	row := q.db.QueryRowContext(ctx, markFeedAsFetched, id)
+	var i Feed
+	err := row.Scan(
+		&i.ID,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Name,
+		&i.Url,
+		&i.Userid,
+		&i.Lastfetchedat,
+	)
+	return i, err
 }
