@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sidkhuntia/go-rss/internal/database"
 )
-
+// types to desrcibe our return types in the API
 type User struct {
 	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
@@ -29,6 +29,7 @@ type FeedFollow struct {
 	FeedId    uuid.UUID `json:"feed_id"`
 }
 
+// helper functions to convert from database types to API types
 func databaseFeedToFeed(dbFeed database.Feed) Feed {
 	return Feed{
 		ID:        dbFeed.ID,

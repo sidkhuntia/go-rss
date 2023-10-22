@@ -10,6 +10,13 @@ import (
 
 type authHandler func(http.ResponseWriter, *http.Request, database.User)
 
+// middlewareAuth is a function that takes an authHandler and returns an http.HandlerFunc.
+// It checks the API key in the request header and retrieves the user from the database.
+// If the API key is invalid or the user cannot be retrieved, it responds with an error.
+// Otherwise, it calls the authHandler with the response writer, request, and user.
+
+// we can returing a anonymous function that takes an http.ResponseWriter and *http.Request beacause chi Router expects a http.HandlerFunc
+
 func (apiCfg *apiConfig) middlewareAuth(handler authHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		apiKey, err := auth.GetApiKey(r.Header)
