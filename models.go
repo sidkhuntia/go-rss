@@ -32,6 +32,13 @@ func databaseFeedToFeed(dbFeed database.Feed) Feed {
 		UserId:    dbFeed.Userid,
 	}
 }
+func databaseFeedsToFeeds(dbFeeds []database.Feed) []Feed {
+	feeds := make([]Feed, len(dbFeeds))
+	for i, dbFeed := range dbFeeds {
+		feeds[i] = databaseFeedToFeed(dbFeed)
+	}
+	return feeds
+}
 func databaseUserToUser(dbUser database.User) User {
 	return User{
 		ID:        dbUser.ID,

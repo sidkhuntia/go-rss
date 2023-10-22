@@ -54,3 +54,37 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 	)
 	return i, err
 }
+
+const getFeeds = `-- name: GetFeeds :many
+SELECT id, createdat, updatedat, name, url, userid FROM feeds WHERE userId = $1
+`
+
+func (q *Queries) GetFeeds(ctx context.Context, userid uuid.UUID) ([]Feed, error) {
+	rows, err := q.db.QueryContext(ctx, getFeeds, userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Feed
+	for rows.Next() {
+		var i Feed
+		if err := rows.Scan(
+			&i.ID,
+			&i.Createdat,
+			&i.Updatedat,
+			&i.Name,
+			&i.Url,
+			&i.Userid,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
